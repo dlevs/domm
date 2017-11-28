@@ -1,0 +1,15 @@
+{
+	"extends": "airbnb-base",
+	"rules": {
+		"indent": ["error", "tab"],
+		"no-tabs": "off",
+		"no-plusplus": "off"
+	},
+	"globals": {
+		"document": true,
+		"window": true,
+		"describe": true,
+		"test": true,
+		"expect": true
+	}
+}
