@@ -8,6 +8,8 @@
 	"globals": {
 		"document": true,
 		"window": true,
+		"HTMLElement": true,
+		"NodeList": true,
 		"describe": true,
 		"test": true,
 		"expect": true

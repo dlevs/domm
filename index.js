@@ -1,3 +1,11 @@
+const betterTypeof = require('better-typeof');
+
+/**
+ * Create DOM nodes for a HTML string.
+ *
+ * @param {string} html
+ * @returns {NodeList|Element}
+ */
 const htmlToDom = (html) => {
 	const div = document.createElement('div');
 
@@ -9,59 +17,45 @@ const htmlToDom = (html) => {
 		return elements[0];
 	}
 
-	// TODO: Array instead of DOMList?
 	return elements;
 };
 
-const escapeHtmlAttribute = attribute => attribute.replace(/"/g, '\\"');
-
+/**
+ * Escape HTML tags so they can be safely added to the page with no
+ * chance of XSS.
+ *
+ * @param {string} str
+ * @returns {string}
+ */
 const escapeHtmlTags = str => str
 	.replace(/</g, '&lt;')
 	.replace(/>/g, '&gt;');
 
-class HTML {
-	constructor(markup) {
-		this.markup = markup;
-	}
+/**
+ * Escape illegal characters for HTML attribute values.
+ *
+ * @param {string} attribute
+ * @returns {string}
+ */
+const escapeHtmlAttribute = attribute => escapeHtmlTags(attribute.replace(/"/g, '\\"'));
 
-	toString() {
-		return this.markup;
-	}
+/**
+ * Transform to apply to Array values interpolated via template literals.
+ *
+ * @param {Array} value
+ * @returns {string}
+ */
+const transformArray = value =>
+	// eslint-disable-next-line no-use-before-define
+	value.map(transformValue).join('');
 
-	toElement() {
-		return htmlToDom(this.markup);
-	}
-
-	static createSafeString(markup) {
-		return markup instanceof HTML
-			? markup
-			: escapeHtmlTags(markup);
-	}
-
-	static markup(strings, ...values) {
-		const markup = strings
-			.reduce(
-				(accum, string, i) => accum + string + transformValue(values[i]),
-				'',
-			)
-			.trim();
-
-		return new HTML(markup);
-	}
-
-	static dom(...args) {
-		return HTML.markup(...args).toElement();
-	}
-}
-
-const betterTypeOf = (value) => {
-	const type = Object.prototype.toString.call(value);
-	return type.substr(8, type.length - 9).toLowerCase();
-};
-
-// eslint-disable-next-line no-use-before-define
-const transformArray = value => value.map(transformValue).join('');
-
+/**
+ * Transform to apply to all values interpolated via template literals
+ * in order to represent them as strings.
+ *
+ * @param {*} value
+ * @returns {string}
+ */
 const transformValue = (value) => {
 	if (value instanceof HTMLElement) {
 		return value.outerHTML;
@@ -71,13 +65,15 @@ const transformValue = (value) => {
 		return transformArray([...value]);
 	}
 
-	if (value instanceof HTML) {
+	// eslint-disable-next-line no-use-before-define
+	if (value instanceof Domm) {
 		return value;
 	}
 
-	switch (betterTypeOf(value)) {
+	switch (betterTypeof(value)) {
 		case 'string':
-			return HTML.createSafeString(value);
+			// eslint-disable-next-line no-use-before-define
+			return Domm.createSafeString(value);
 
 		case 'array':
 			return transformArray(value);
@@ -96,4 +92,39 @@ const transformValue = (value) => {
 	}
 };
 
-module.exports = HTML;
+class Domm {
+	constructor(html) {
+		this.html = html;
+	}
+
+	toString() {
+		return this.html;
+	}
+
+	toElement() {
+		return htmlToDom(this.html);
+	}
+
+	static createSafeString(html) {
+		return html instanceof Domm
+			? html
+			: escapeHtmlTags(html);
+	}
+
+	static html(strings, ...values) {
+		const html = strings
+			.reduce(
+				(accum, string, i) => accum + string + transformValue(values[i]),
+				'',
+			)
+			.trim();
+
+		return new Domm(html);
+	}
+
+	static dom(...args) {
+		return Domm.html(...args).toElement();
+	}
+}
+
+module.exports = Domm;
