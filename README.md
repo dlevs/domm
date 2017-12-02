@@ -49,7 +49,7 @@ D.html`
         </ul>
         ${backLink}
     </div>
-`
+`;
 // =>
 // <div>
 //     <h1 class="heading-main">Houses</h1>
@@ -71,5 +71,5 @@ All strings that are interpolated are escaped in this way. To dangerously escape
 ```javascript
 const title = someExternalFunctionForGettingTitle();
 
-D.dom`<h1>${new D(title)}</h1>`
+D.dom`<h1>${new D(title)}</h1>`;
 ```
